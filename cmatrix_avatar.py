@@ -22,7 +22,8 @@ class CMatrixAvatar(object):
         self.p_light_gary   = "\33[0;37m" # print light gary
         self.p_dark_gary    = "\33[0;90m" # print dark gary
         self.p_light_red    = "\33[0;91m" # print light red
-        self.p_light_green  = "\33[0;92m" # print light red
+        self.p_light_green  = "\33[0;92m" # print light green
+        self.p_light_blue  = "\33[0;94m" # print light blue
         self.p_default      = "\33[0m"    # print default
 
     def set_background_string(self, string=None):
@@ -50,6 +51,13 @@ class CMatrixAvatar(object):
         for i in range(len(self.background_string)):
             self.background_string[i] = self.background_string[i].replace(" ", "")
         self.background_string = "".join(self.background_string)
+        tmp = ""
+        for i in self.background_string:
+            if random.randint(0,1) == 0:
+                tmp += i.lower()
+            else:
+                tmp += i.upper()
+        self.background_string = tmp
 
     def set_embed_string(self, string=None):
         if string == None:
@@ -72,7 +80,22 @@ class CMatrixAvatar(object):
             string = string[1:]
         else:
             assert type(string) == type("Hello")
-        self.embed_string = string
+        
+        string_lines = string.split("\n")
+        string_lines = [list(i) for i in string_lines]
+        len_x = 0
+        len_y = 0
+        for i in string_lines:
+            len_x += 1
+            if len(i) > len_y:
+                len_y = len(i)
+        for i in range(len(string_lines)):
+            if len(string_lines[i]) < len_y:
+                for j in range(len(string_lines[i]), len_y):
+                    string_lines[i].append(" ")
+        self.embed_string = string_lines
+        self.embed_lenx = len_x
+        self.embed_leny = len_y
 
     def gen_cmatrix(self, row_no, col_no):
         cmatrix_horizontal = []
@@ -82,7 +105,18 @@ class CMatrixAvatar(object):
                 length = random.randint(0, row_no)
                 first_position = random.randint(0, row_no)
                 for j in range(length):
-                    cmatrix_horizontal[i][(first_position+j)%row_no] = "+"
+                    tmp = j / length
+                    if tmp >= 0 and tmp < 0.2:
+                        tmp = 22
+                    elif tmp >= 0.2 and tmp < 0.4:
+                        tmp = 28
+                    elif tmp >= 0.4 and tmp < 0.6:
+                        tmp = 34
+                    elif tmp >= 0.6 and tmp < 0.8:
+                        tmp = 40
+                    elif tmp >= 0.8 and tmp < 1.0:
+                        tmp = 46
+                    cmatrix_horizontal[i][(first_position+j)%row_no] = "\033[38;5;%dm+"%(tmp,)
 
         cmatrix_vertical = []
         for i in range(row_no):
@@ -90,8 +124,9 @@ class CMatrixAvatar(object):
         for i in range(row_no):
             for j in range(col_no):
                 cmatrix_vertical[i][j] = cmatrix_horizontal[j][i]
-        cmatrix_vertical = ["".join(i) for i in cmatrix_vertical]
-        self.cmatrix = "\n".join(cmatrix_vertical)
+        # cmatrix_vertical = ["".join(i) for i in cmatrix_vertical]
+        # self.cmatrix = "\n".join(cmatrix_vertical)
+        self.cmatrix = cmatrix_vertical
         self.cmatrix_lenx = row_no
         self.cmatrix_leny = col_no
 
@@ -106,16 +141,10 @@ class CMatrixAvatar(object):
         char_set = set(char_set)
         char_set = list(char_set)
 
-        self.cmatrix = self.p_light_green + self.cmatrix + self.p_default
-
-        tmp_str = ""
-        for i in self.cmatrix:
-            if i in char_set:
-                tmp_str += self.p_default + i + self.p_light_green
-            else:
-                tmp_str += i
-
-        self.cmatrix = tmp_str
+        for i in range(self.cmatrix_lenx):
+            for j in range(self.cmatrix_leny):
+                if self.cmatrix[i][j][-1] in char_set:
+                    self.cmatrix[i][j] = self.p_yellow + self.cmatrix[i][j][-1] #+ self.p_light_green
         
     def substitute_colum(self, string, col):
         assert type(string) == type("Hello"), "Wrong type"
@@ -166,22 +195,16 @@ class CMatrixAvatar(object):
         self.cmatrix = "".join(cmatrix_list)
 
     def substitute_all_with_embed(self):
-        len_x = 0
-        len_y = 0
-        embed_string_lines = self.embed_string.split("\n")
-        for i in embed_string_lines:
-            len_x += 1
-            if len(i) > len_y:
-                len_y = len(i)
+        len_x = self.embed_lenx
+        len_y = self.embed_leny
+        embed_string_lines = self.embed_string
         if len_x <= self.cmatrix_lenx and len_y <= self.cmatrix_leny:
             start_x = self.cmatrix_lenx//2 - len_x//2
             start_y = self.cmatrix_leny//2 - len_y//2
-            cmatrix_lines = self.cmatrix.split("\n")
-            cmatrix_lines = [list(i) for i in cmatrix_lines]
+            cmatrix_lines = self.cmatrix
             for i in range(len_x):
                 for j in range(len_y):
-                    embed_string_lines[i][j]
-                    cmatrix_lines[i+start_x][j+start_y] = embed_string_lines[i][j]
+                    cmatrix_lines[i+start_x][j+start_y] = self.p_light_blue + embed_string_lines[i][j]
             
             background_str_count = 0
             start_x = self.cmatrix_lenx//2 - len_x//2
@@ -190,25 +213,14 @@ class CMatrixAvatar(object):
                 for j in range(self.cmatrix_leny):
                     if i >= start_x and i< start_x + len_x and j >= start_y and j < start_y + len_y:
                         pass
-                    elif not (cmatrix_lines[i][j] in [" ", "\n"]):
-                        if background_str_count < len(self.background_string):
-                            cmatrix_lines[i][j] = self.background_string[background_str_count]
-                            background_str_count += 1
-                        else:
+                    elif "+" in cmatrix_lines[i][j]:
+                        if background_str_count >= len(self.background_string):
                             background_str_count = 0
-                            cmatrix_lines[i][j] = self.background_string[background_str_count]
-                            background_str_count += 1
+                        # print(cmatrix_lines[i][j])
+                        cmatrix_lines[i][j] = cmatrix_lines[i][j].replace("+", self.background_string[background_str_count])
+                        background_str_count += 1
             
-            for i in range(self.cmatrix_lenx):
-                for j in range(self.cmatrix_leny):
-                    if cmatrix_lines[i][j].isalpha():
-                        tmp = random.randint(0, 1)
-                        if tmp == 0:
-                            cmatrix_lines[i][j] = cmatrix_lines[i][j].lower()
-                        else:
-                            cmatrix_lines[i][j] = cmatrix_lines[i][j].upper()
-            cmatrix_lines = ["".join(i) for i in cmatrix_lines]
-            self.cmatrix = "\n".join(cmatrix_lines)
+            self.cmatrix = cmatrix_lines
         else:
             assert False, "Wrong size"
 
@@ -238,12 +250,15 @@ class CMatrixAvatar(object):
 
     def show(self):
         count = 0
-        for i in self.cmatrix:
-            if i != " " and i != "\n":
-                count += 1
+        for i in range(self.cmatrix_lenx):
+            for j in range(self.cmatrix_leny):
+                if not (" " in self.cmatrix[i][j]):
+                    count += 1
         print("Latter count:", count)
         print("\n")
-        print(self.cmatrix)
+        tmp = ["".join(i) for i in self.cmatrix]
+        tmp = "\n".join(tmp)
+        print(tmp + self.p_default)
 
 
 if __name__ == "__main__":
@@ -251,8 +266,11 @@ if __name__ == "__main__":
     cmatrix.set_background_string()
     cmatrix.set_embed_string()
     cmatrix.gen_cmatrix(43//3*2, 86//3*2)
+    cmatrix.show()
     # cmatrix.substitute_all()
     # cmatrix.centered_embed()
     cmatrix.substitute_all_with_embed()
+    cmatrix.show()
     cmatrix.mark_latters()
     cmatrix.show()
+    # print("\033[38;5;22mA \033[38;5;28mA \033[38;5;34mA \033[38;5;40mA \033[38;5;46mA \033[0m")
