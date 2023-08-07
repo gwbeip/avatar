@@ -107,8 +107,7 @@ class CMatrixAvatar(object):
 ██║  ███╗██║ █╗ ██║██████╔╝
 ██║   ██║██║███╗██║██╔══██╗
 ╚██████╔╝╚███╔███╔╝██████╔╝
- ╚═════╝  ╚══╝╚══╝ ╚═════╝ 
-"""
+ ╚═════╝  ╚══╝╚══╝ ╚═════╝ """
 
             """
 ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
@@ -315,12 +314,16 @@ if __name__ == "__main__":
     cmatrix = CMatrixAvatar()
     cmatrix.set_background_string()
     cmatrix.set_embed_string()
-    cmatrix.gen_cmatrix(43//1, 86//1)
+    cmatrix.gen_cmatrix(43//3*2, 86//4*3+4)
     # cmatrix.show()
-    # cmatrix.substitute_all()
-    # cmatrix.centered_embed()
     cmatrix.substitute_all_with_embed()
-    cmatrix.show()
+    # cmatrix.show()
     cmatrix.mark_latters()
     cmatrix.show()
+
+    cmatrix.gen_cmatrix(43//1, 86*3//2)
+    cmatrix.substitute_all_with_embed()
+    cmatrix.mark_latters()
+    cmatrix.show()
+
     # print("\033[38;5;22mA \033[38;5;28mA \033[38;5;34mA \033[38;5;40mA \033[38;5;46mA \033[0m")
